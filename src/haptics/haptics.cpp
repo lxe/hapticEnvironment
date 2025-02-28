@@ -1,4 +1,5 @@
 #include "haptics.h"
+#include "platform_compat.h"
 
 /**
  * @file haptics.h 
@@ -95,7 +96,7 @@ void updateHaptics(void)
   cPrecisionClock clock;
   clock.reset();
   cVector3d angVel(0.0, 0.0, 0.1);
-  usleep(500); // give some time for other threads to start up
+  platform::usleep(500); // give some time for other threads to start up
   while (controlData.simulationRunning){
     clock.stop();
     double timeInterval = clock.getCurrentTimeSeconds();

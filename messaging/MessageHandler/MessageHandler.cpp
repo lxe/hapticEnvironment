@@ -5,8 +5,25 @@
 
 MessageHandler::MessageHandler(const char* address, int port)
 {
+#ifdef _WIN32
+  // Initialize Winsock
+  int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+  if (result != 0) {
+    cout << "WSAStartup failed: " << result << endl;
+    return;
+  }
+#endif
+
   srv = new rpc::server(address, port);
   startTime = high_resolution_clock::now();
+}
+
+MessageHandler::~MessageHandler()
+{
+#ifdef _WIN32
+  WSACleanup();
+#endif
+  delete srv;
 }
 
 rpc::server* MessageHandler::getServer()
@@ -31,16 +48,36 @@ int MessageHandler::addModule(int moduleID, string ipAddr, int port) //, const i
   cout << "Adding module " << moduleID << " with IP " << ipAddr << ":" << port << endl;
   struct sockaddr_in sockStruct;
   int sockLen = sizeof(sockStruct);
+  
+#ifdef _WIN32
+  SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (sock == INVALID_SOCKET) {
+    cout << "Opening socket for module number " << moduleID << " failed with error: " << WSAGetLastError() << endl;
+    return 0;
+  }
+#else
   int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (sock < 0) {
     cout << "Opening socket for module number " << moduleID << " failed." << endl;
     return 0;
   }
+#endif
+
   memset((char *) &sockStruct, 0, sockLen);
   sockStruct.sin_family = AF_INET;
   sockStruct.sin_port = htons(port);
   sockStruct.sin_addr.s_addr = inet_addr(ipAddr.c_str());
   
+#ifdef _WIN32
+  BOOL opt = TRUE;
+  int broadcast = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&opt, sizeof(opt));
+  int reuseAddr = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
+  if (broadcast == SOCKET_ERROR || reuseAddr == SOCKET_ERROR) {
+    cout << "Failed to set socket options for module " << moduleID << " with error: " << WSAGetLastError() << endl;
+    closesocket(sock);
+    return 0;
+  }
+#else
   int opt = 1;
   int broadcast = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &opt, sizeof(opt));
   int reuseAddr = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -49,6 +86,7 @@ int MessageHandler::addModule(int moduleID, string ipAddr, int port) //, const i
     cout << "Failed to set socket options for module " << moduleID << "." << endl;
     return 0;
   }
+#endif
 
   /*int bind_sock = bind(sock, (struct sockaddr*) &sockStruct, sockLen);
   if (bind_sock < 0) {
@@ -66,7 +104,7 @@ int MessageHandler::addModule(int moduleID, string ipAddr, int port) //, const i
 int MessageHandler::subscribeTo(int myID, int subscribeID) 
 {
   map<int, set<int>>::iterator it = moduleSubscribers.find(subscribeID);
-  if (it == moduleSubscribers.end() and subscribeID != 999) {
+  if (it == moduleSubscribers.end() && subscribeID != 999) {
     cout << "Could not find module ID " << subscribeID << "." << endl;
     return 0;
   }
@@ -95,10 +133,18 @@ int MessageHandler::sendMessage(vector<char> packet, uint16_t lengthPacket, int 
       int socketNum = moduleSockets[*setIt];
       struct sockaddr_in sockStruct = socketStructs[socketNum];
       int socketLen = sizeof(sockStruct);
+      
+#ifdef _WIN32
+      if (sendto(socketNum, (const char*)&packet[0], lengthPacket, 0, (struct sockaddr*) &(socketStructs[socketNum]), socketLen) == SOCKET_ERROR) {
+        cout << "Data sending error for module " << sendingModule << " sending to module " << *setIt << " with error: " << WSAGetLastError() << endl;
+        return 0;
+      }
+#else
       if (sendto(socketNum, &packet[0], lengthPacket, 0, (struct sockaddr*) &(socketStructs[socketNum]), socketLen) < 0) {
         cout << "Data sending error for module " << sendingModule << " sending to module " << *setIt << "." << endl;
         return 0;
       }
+#endif
     }
     return 1; 
   }
@@ -136,4 +182,7 @@ int main(int argc, char *argv[])
   mh->getServer()->bind("sendMessage", [&mh](vector<char> packet, uint16_t lengthPacket, int sendingModule){return mh->sendMessage(packet, lengthPacket, sendingModule);});
   mh->getServer()->bind("testMessage", [&mh](int val){return mh->testMessage(val);});
   mh->getServer()->run(); 
+  
+  delete mh;
+  return 0;
 }

@@ -21,6 +21,8 @@ GraphicsData graphicsData;
 
 void initDisplay(void)
 {
+  cout << "Starting CHAI3D window initialization..." << endl;
+  
   graphicsData.stereoMode = C_STEREO_DISABLED;
   graphicsData.fullscreen = false;
   graphicsData.mirroredDisplay = false;
@@ -29,17 +31,24 @@ void initDisplay(void)
     cSleepMs(1000);
     return;
   }
+  cout << "GLFW initialized successfully" << endl;
   
   glfwSetErrorCallback(errorCallback);
 
   const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+  cout << "Got video mode - Width: " << mode->width << " Height: " << mode->height << endl;
+  
   int w = 0.8 * mode->height;
   int h = 0.5 * mode->height;
   int x = 0.5 * (mode->width-w);
   int y = 0.5 * (mode->height-h);
   
+  cout << "Setting up window hints..." << endl;
+  glfwWindowHint(GLFW_SAMPLES, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
   if (graphicsData.stereoMode == C_STEREO_ACTIVE) {
     glfwWindowHint(GLFW_STEREO, GL_TRUE);
@@ -54,6 +63,7 @@ void initDisplay(void)
   graphicsData.yPos = y;
   graphicsData.swapInterval = 1;  
 
+  cout << "Creating GLFW window..." << endl;
   graphicsData.window = glfwCreateWindow(w, h, "CHAI3D", NULL, NULL);
   if (!graphicsData.window) {
     cout << "Failed to create window" << endl;
@@ -61,21 +71,33 @@ void initDisplay(void)
     glfwTerminate();
     return;
   }
+  cout << "Window created successfully" << endl;
   
+  cout << "Setting up window properties..." << endl;
   glfwGetWindowSize(graphicsData.window, &graphicsData.width, &graphicsData.height);
   glfwSetWindowPos(graphicsData.window, graphicsData.xPos, graphicsData.yPos);
   glfwSetKeyCallback(graphicsData.window, keySelectCallback);
   glfwSetWindowSizeCallback(graphicsData.window, resizeWindowCallback);
   glfwMakeContextCurrent(graphicsData.window);
   glfwSwapInterval(graphicsData.swapInterval);
+  cout << "Window properties set" << endl;
 
 #ifdef GLEW_VERSION
+  cout << "Initializing GLEW..." << endl;
+  glewExperimental = GL_TRUE;
   if(glewInit() != GLEW_OK) {
     cout << "Failed to initialize GLEW library" << endl;
     glfwTerminate();
     return;
   }
+  cout << "GLEW initialized successfully" << endl;
 #endif
+
+  cout << "OpenGL Version: " << glGetString(GL_VERSION) << endl;
+  cout << "OpenGL Vendor: " << glGetString(GL_VENDOR) << endl;
+  cout << "OpenGL Renderer: " << glGetString(GL_RENDERER) << endl;
+
+  cout << "CHAI3D window initialization complete" << endl;
 }
 
 /**
@@ -83,25 +105,38 @@ void initDisplay(void)
  */
 void initScene(void)
 {
+  cout << "Starting scene initialization..." << endl;
+  
+  cout << "Creating world..." << endl;
   graphicsData.world = new cWorld();
+  cout << "Setting world background..." << endl;
   graphicsData.world->m_backgroundColor.setBlack();
+  cout << "World created successfully" << endl;
+  
+  cout << "Setting up camera..." << endl;
   graphicsData.camera = new cCamera(graphicsData.world);
+  cout << "Adding camera to world..." << endl;
   graphicsData.world->addChild(graphicsData.camera);
+  cout << "Setting camera position..." << endl;
   graphicsData.camera->set(cVector3d(400.0, 0.0, 0.0),
                        cVector3d(0.0, 0.0, 0.0),
                        cVector3d(0.0, 0.0, 1.0));
-  //graphicsData.camera->setClippingPlanes(10.0, -10.0);
-  //graphicsData.camera->setStereoMode(graphicsData.stereoMode);
-  //graphicsData.camera->setStereoEyeSeparation(0.03);
-  //graphicsData.camera->setStereoFocalLength(50.0);
+  cout << "Setting camera mirror properties..." << endl;                     
   graphicsData.camera->setMirrorVertical(graphicsData.mirroredDisplay);
   graphicsData.camera->setMirrorHorizontal(graphicsData.mirroredDisplay);  
+  cout << "Camera setup complete" << endl;
 
+  cout << "Setting up lighting..." << endl;
   graphicsData.light = new cDirectionalLight(graphicsData.world);
+  cout << "Adding light to camera..." << endl;
   graphicsData.camera->addChild(graphicsData.light); 
+  cout << "Configuring light properties..." << endl;
   graphicsData.light->setEnabled(true);
   graphicsData.light->setLocalPos(0.0, 500.0, 0.0);
   graphicsData.light->setDir(0.0, -1.0, 0.0);
+  cout << "Lighting setup complete" << endl;
+  
+  cout << "Scene initialization complete" << endl;
 }
 
 /**
@@ -203,17 +238,42 @@ void keySelectCallback(GLFWwindow* window, int key, int scancode, int action, in
  */
 void updateGraphics(void)
 {
+  cout << "Starting updateGraphics..." << endl;
+  cout.flush();
+  
+  cout << "Updating shadow maps..." << endl;
+  cout.flush();
   graphicsData.world->updateShadowMaps(false, graphicsData.mirroredDisplay);
+  
+  cout << "Rendering camera view..." << endl;
+  cout.flush();
   graphicsData.camera->renderView(graphicsData.width, graphicsData.height);
+  
+  cout << "Processing moving objects..." << endl;
+  cout.flush();
   for(vector<cGenericMovingObject*>::iterator it = graphicsData.movingObjects.begin(); it != graphicsData.movingObjects.end(); it++)
   {
     double dt = (clock() - graphicsData.graphicsClock)/double(CLOCKS_PER_SEC);
     graphicsData.graphicsClock = clock();
+    cout << "Updating object with dt = " << dt << endl;
+    cout.flush();
     (*it)->graphicsLoopFunction(dt, hapticsData.tool->getDeviceGlobalPos(), hapticsData.tool->getDeviceGlobalLinVel());
   }
+  
+  cout << "Swapping buffers..." << endl;
+  cout.flush();
+  glfwSwapBuffers(graphicsData.window);
+  
+  cout << "Finishing GL operations..." << endl;
+  cout.flush();
   glFinish();
+  
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
-    cout << "Error: " << gluErrorString(err) << endl;
+    cout << "OpenGL Error: " << gluErrorString(err) << endl;
+    cout.flush();
   }
+  
+  cout << "updateGraphics complete" << endl;
+  cout.flush();
 }

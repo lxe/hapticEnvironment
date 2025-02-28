@@ -2,6 +2,7 @@
 #include "haptics/haptics.h"
 #include "network.h"
 #include "core/controller.h"
+#include "platform_compat.h"
 
 using namespace chai3d;
 using namespace std;
@@ -45,7 +46,7 @@ void updateListener()
       //cout << "Bytes read " << bytesRead << endl;
       parsePacket(packetPointer);
     }
-    usleep(100); // 1000 microseconds = 1 millisecond
+    platform::usleep(100); // 1000 microseconds = 1 millisecond
   }
  closeMessagingSocket();
  controlData.listenerUp = false;

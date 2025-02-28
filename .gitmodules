@@ -1,3 +1,9 @@
 [submodule "external/rpclib"]
 	path = external/rpclib
 	url = https://github.com/rpclib/rpclib.git
+
+[submodule "external/chai3d"]
+	path = external/chai3d
+	url = https://github.com/chai3d/chai3d.git
+
+

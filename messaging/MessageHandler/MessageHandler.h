@@ -11,11 +11,19 @@
 #include <string>
 #include <map>
 #include <set>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #pragma comment(lib, "ws2_32.lib")
+#else
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <unistd.h>
+#endif
+
 #include "messageDefinitions.h"
 
 using namespace std::chrono;
@@ -32,8 +40,13 @@ class MessageHandler
     map<int, int> moduleSockets; // map of moduleID to socket number 
     map<int, struct sockaddr_in> socketStructs; //map of socket number to the socket struct
 
+#ifdef _WIN32
+    WSADATA wsaData;
+#endif
+
   public:
     MessageHandler(const char* address, int iPort);
+    ~MessageHandler();
     rpc::server* getServer();
     int getMsgNum();
     double getTimestamp();

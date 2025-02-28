@@ -1,4 +1,5 @@
 #include "cCST.h"
+#include "platform_compat.h"
 extern ControlData controlData;
 extern HapticData hapticsData;
 extern GraphicsData graphicsData;
@@ -75,13 +76,14 @@ cVector3d* cCST::computeNextPosition(cVector3d toolPos)
     vector<char> packetData(packet, packet+sizeof(packet) / sizeof(char));
     auto cstInt = controlData.client->async_call("sendMessage", packetData, sizeof(cstData), controlData.MODULE_NUM);    
     //sendPacket((char *) packet, sizeof(cstData), false);
-    usleep(1000);
+    platform::usleep(250);
     cstInt.wait();
     auto cstNum = cstInt.get().as<int>();
     return nextPos;
   }
   else {
-    usleep(500);
+    platform::usleep(250);
+    platform::usleep(500);
     return currPos;
   }
 }
@@ -98,7 +100,7 @@ cVector3d* cCST::computeNextPosition(cVector3d toolPos)
 bool cCST::computeForce(const cVector3d& a_toolPos, const cVector3d& a_toolVel,
                   const unsigned int& a_toolID, cVector3d& a_reactionForce)
 {
-  usleep(1000);
+  platform::usleep(1000);
   if (hapticEnabled == true && running == true) {
     cVector3d* nextPos = cCST::computeNextPosition(a_toolPos);
     double forceMark = (forceMagnitude * (hapticsData.maxForce) * (nextPos->y()/200) + 0.0);

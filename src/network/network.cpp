@@ -1,5 +1,6 @@
 #include "network.h"
 #include "core/controller.h"
+#include "platform_compat.h"
 
 using namespace chai3d;
 using namespace std;
@@ -53,7 +54,7 @@ int subscribeToTrialControl()
       cout << "Error subscribing to Trial Control, exiting." << endl;
       return 0;
     }
-    sleep(5); // 1000 microseconds = 1 millisecond
+    platform::sleep(5); // 1000 microseconds = 1 millisecond
   }
   return 1;
 }
@@ -65,31 +66,45 @@ int subscribeToTrialControl()
 int openMessagingSocket()
 {
   cout << "Opening messaging socket..." << endl;
+  cout << "Creating socket with AF_INET, SOCK_DGRAM, IPPROTO_UDP..." << endl;
   controlData.msg_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (controlData.msg_socket < 0) {
     cout << "Opening messaging socket failed" << endl;
     exit(1);
   }
+  cout << "Socket created successfully with fd: " << controlData.msg_socket << endl;
 
+  cout << "Setting up socket address structure..." << endl;
   memset((char*) &msgStruct, 0, msgLen);
   msgStruct.sin_family = AF_INET;
   msgStruct.sin_port = htons(controlData.PORT);
   msgStruct.sin_addr.s_addr = inet_addr(controlData.IPADDR);
+  cout << "Socket structure initialized with port " << controlData.PORT << " and IP " << controlData.IPADDR << endl;
+
+  cout << "Setting socket options..." << endl;
   int opt = 1;
-  int broadcast = setsockopt(controlData.msg_socket, SOL_SOCKET, SO_BROADCAST, &opt, sizeof(opt)); 
-  int reuseAddr = setsockopt(controlData.msg_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-  int reusePort = setsockopt(controlData.msg_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+  int broadcast = platform::setsockopt(controlData.msg_socket, SOL_SOCKET, SO_BROADCAST, &opt, sizeof(opt)); 
+  cout << "SO_BROADCAST result: " << broadcast << endl;
+  int reuseAddr = platform::setsockopt(controlData.msg_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+  cout << "SO_REUSEADDR result: " << reuseAddr << endl;
+  int reusePort = platform::setsockopt(controlData.msg_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+  cout << "SO_REUSEPORT result: " << reusePort << endl;
+
   if (broadcast < 0 || reuseAddr < 0 || reusePort < 0)
   {
     cout << "Failed to set socket options" << endl;
+    cout << "broadcast=" << broadcast << ", reuseAddr=" << reuseAddr << ", reusePort=" << reusePort << endl;
     exit(1);
   }
+  cout << "Socket options set successfully" << endl;
 
-  int bind_sock_in = bind(controlData.msg_socket, (struct sockaddr*) &msgStruct, msgLen);
+  cout << "Binding socket..." << endl;
+  int bind_sock_in = platform::bind(controlData.msg_socket, (struct sockaddr*) &msgStruct, msgLen);
   if (bind_sock_in < 0) {
-    cout << "Error binding messaging socket" << endl;
+    cout << "Error binding messaging socket, result=" << bind_sock_in << endl;
     exit(1);
   }
+  cout << "Socket bound successfully" << endl;
   return 1; 
 }
 
@@ -109,7 +124,7 @@ void closeMessagingSocket()
 int readPacket(char* packetPointer)
 {
   int value = 0, bytesRead = 0;
-  ioctl(controlData.msg_socket, FIONREAD, &value);
+  platform::ioctl(controlData.msg_socket, FIONREAD, &value);
   if (value > 0) {
     bytesRead = recvfrom(controlData.msg_socket, packetPointer, MAX_PACKET_LENGTH, 0, (struct sockaddr*) &msgStruct, (socklen_t *) &msgLen);
     //cout << bytesRead << " bytes read from socket" << endl;
@@ -122,6 +137,5 @@ int readPacket(char* packetPointer)
  */
 void closeAllConnections()
 {
-  close(controlData.msg_socket);
-
+  platform::close(controlData.msg_socket);
 }

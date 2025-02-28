@@ -2,6 +2,7 @@
 
 #include "haptics/haptics.h"
 #include "network.h"
+#include "platform_compat.h"
 
 using namespace chai3d;
 using namespace std;
@@ -84,11 +85,12 @@ void updateStreamer(void)
     for (objectItr = controlData.objectMap.begin(); objectItr != controlData.objectMap.end(); objectItr++)
     {
       if (hapticsData.tool->isInContact(objectItr->second)) {
-        int n = objectItr->first.length();
-        char objectName[n+1];
-        strcpy(objectName, objectItr->first.c_str());
-        memcpy(&(collisions[collisionIdx]), objectName, sizeof(collisions[collisionIdx]));
-        collisionIdx++;
+        string objName = objectItr->first;
+        if (objName.length() < MAX_STRING_LENGTH) {
+            strncpy(&(collisions[collisionIdx][0]), objName.c_str(), MAX_STRING_LENGTH - 1);
+            collisions[collisionIdx][MAX_STRING_LENGTH - 1] = '\0';
+            collisionIdx++;
+        }
       }
     }
     memcpy(&(toolData.collisions), collisions, sizeof(toolData.collisions));
@@ -101,7 +103,7 @@ void updateStreamer(void)
     {
       controlData.dataFile.write((const char*) packet, sizeof(toolData));
     }
-    usleep(250); // 1000 microseconds = 1 millisecond
+    platform::usleep(250); // 1000 microseconds = 1 millisecond
     sendInt.wait();
     auto sendNum = sendInt.get().as<int>();
   }

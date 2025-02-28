@@ -1,4 +1,5 @@
 #include "controller.h"
+#include "platform_compat.h"
 
 /**
  * @file controller.h
@@ -71,37 +72,83 @@ int main(int argc, char* argv[])
     initScene();
   }
 
+  cout << "Display initialized" << endl;
+  cout.flush();
+
+  cout << "*** Initializing Haptics ***" << endl;
+  cout.flush();
   initHaptics();
+  cout << "Haptics initialized" << endl;
+  cout.flush();
+
+  cout << "*** Starting Haptics Thread ***" << endl;
+  cout.flush();
   startHapticsThread(); 
+  cout << "Haptics thread started" << endl;
+  cout.flush();
+
+  cout << "*** Initializing Messaging ***" << endl;
+  cout.flush();
   atexit(close);
   resizeWindowCallback(graphicsData.window, graphicsData.width, graphicsData.height);
-  sleep(2); 
+  platform::sleep(2); 
   openMessagingSocket();
+  cout << "Messaging socket opened" << endl;
+  cout.flush();
+
+  cout << "*** Adding Message Handler Module ***" << endl;
+  cout.flush();
   int addSuccess = addMessageHandlerModule();
   if (addSuccess == 0) {
     cout << "Module addition failed" << endl;
     close();
     exit(1);
   }
-  sleep(1);
+  cout << "Module addition successful" << endl;
+  cout.flush();
+
+  cout << "*** Subscribing to Trial Control ***" << endl;
+  cout.flush();
+  platform::sleep(1);
   int subscribeSuccess = subscribeToTrialControl();
   if (subscribeSuccess == 0) {
     cout << "Subcribe to Trial Control failed" << endl;
     close();
     exit(1);
   }
-  sleep(2);
+  cout << "Subcribe to Trial Control successful" << endl;
+  cout.flush();
+
+  cout << "*** Starting Streamer and Listener ***" << endl;
+  cout.flush();
+  platform::sleep(2);
   startStreamer(); 
   startListener();
   cout << "streamer and listener started" << endl;
+  cout.flush();
   
   while (!glfwWindowShouldClose(graphicsData.window)) {
+    // cout << "Main loop iteration starting..." << endl;
+    cout.flush();
+    
     glfwGetWindowSize(graphicsData.window, &graphicsData.width, &graphicsData.height);
+    // cout << "Window size retrieved: " << graphicsData.width << "x" << graphicsData.height << endl;
+    cout.flush();
+    
     graphicsData.graphicsClock = clock();
+    // cout << "Graphics clock updated" << endl;
+    cout.flush();
+    
     updateGraphics();
-    glfwSwapBuffers(graphicsData.window);
+    
+    // cout << "Graphics updated, polling events..." << endl;
+    cout.flush();
+    
     glfwPollEvents();
     graphicsData.freqCounterGraphics.signal(1);
+    
+    // cout << "Main loop iteration complete" << endl;
+    cout.flush();
   }
   glfwDestroyWindow(graphicsData.window);
   glfwTerminate();
@@ -127,7 +174,7 @@ void close()
   controlData.simulationRunning = false;
   while (!controlData.simulationFinished) {
     controlData.simulationFinished = allThreadsDown();
-    cSleepMs(100);
+    platform::sleep(100);
   }
   hapticsData.tool->stop();
   cout << "Haptic tool stopped" << endl;
