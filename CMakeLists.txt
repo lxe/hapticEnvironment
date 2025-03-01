@@ -6,7 +6,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-
 # Add external dependencies
 add_subdirectory(external/rpclib)
 add_subdirectory(external/chai3d)
@@ -20,6 +19,11 @@ if(UNIX AND NOT APPLE)
     find_package(ALSA REQUIRED)
     find_package(X11 REQUIRED)
     find_package(Threads REQUIRED)
+    
+    # Find libusb-1.0
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+    include_directories(${LIBUSB_INCLUDE_DIRS})
 endif()
 
 # Source files
@@ -83,6 +87,21 @@ if(WIN32)
         winmm
     )
 elseif(UNIX AND NOT APPLE)
+    # Set DHD paths
+    set(DHD_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/chai3d/externals/DHD/lib/lin-${CMAKE_SYSTEM_PROCESSOR})
+    set(DHD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/chai3d/externals/DHD/include)
+
+    # Add DHD include directory
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        ${DHD_INCLUDE_DIR}
+    )
+    
+    # Add DHD library
+    find_library(DHD_LIBRARY NAMES drd PATHS ${DHD_LIB_DIR} NO_DEFAULT_PATH)
+    if(NOT DHD_LIBRARY)
+        message(FATAL_ERROR "DHD library not found in ${DHD_LIB_DIR}")
+    endif()
+    
     target_link_libraries(${PROJECT_NAME} PRIVATE
         ${ALSA_LIBRARIES}
         ${X11_LIBRARIES}
@@ -90,6 +109,8 @@ elseif(UNIX AND NOT APPLE)
         dl
         udev
         pthread
+        ${DHD_LIBRARY}  # Use the full path to the library
+        ${LIBUSB_LIBRARIES}  # Add libusb
     )
 endif()
 
@@ -141,6 +162,11 @@ target_link_libraries(chai3d-demo PRIVATE
 if(WIN32)
     target_link_libraries(chai3d-demo PRIVATE winmm)
 elseif(UNIX AND NOT APPLE)
+    # Add DHD include directory
+    target_include_directories(chai3d-demo PRIVATE
+        ${DHD_INCLUDE_DIR}
+    )
+    
     target_link_libraries(chai3d-demo PRIVATE
         ${ALSA_LIBRARIES}
         ${X11_LIBRARIES}
@@ -148,5 +174,7 @@ elseif(UNIX AND NOT APPLE)
         dl
         udev
         pthread
+        ${DHD_LIBRARY}  # Use the full path to the library
+        ${LIBUSB_LIBRARIES}  # Add libusb
     )
 endif() 
