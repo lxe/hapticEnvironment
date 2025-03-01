@@ -14,6 +14,14 @@ add_subdirectory(external/chai3d)
 # Find OpenGL
 find_package(OpenGL REQUIRED)
 
+# Find required packages
+if(UNIX AND NOT APPLE)
+    # Find Linux-specific dependencies
+    find_package(ALSA REQUIRED)
+    find_package(X11 REQUIRED)
+    find_package(Threads REQUIRED)
+endif()
+
 # Source files
 file(GLOB_RECURSE HAPTIC_SOURCES 
     "src/*.cpp"
@@ -74,6 +82,15 @@ if(WIN32)
         Iphlpapi
         winmm
     )
+elseif(UNIX AND NOT APPLE)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        ${ALSA_LIBRARIES}
+        ${X11_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        dl
+        udev
+        pthread
+    )
 endif()
 
 # Message Handler executable
@@ -123,4 +140,13 @@ target_link_libraries(chai3d-demo PRIVATE
 
 if(WIN32)
     target_link_libraries(chai3d-demo PRIVATE winmm)
+elseif(UNIX AND NOT APPLE)
+    target_link_libraries(chai3d-demo PRIVATE
+        ${ALSA_LIBRARIES}
+        ${X11_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        dl
+        udev
+        pthread
+    )
 endif() 

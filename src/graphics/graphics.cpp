@@ -238,42 +238,22 @@ void keySelectCallback(GLFWwindow* window, int key, int scancode, int action, in
  */
 void updateGraphics(void)
 {
-  cout << "Starting updateGraphics..." << endl;
-  cout.flush();
-  
-  cout << "Updating shadow maps..." << endl;
-  cout.flush();
   graphicsData.world->updateShadowMaps(false, graphicsData.mirroredDisplay);
-  
-  cout << "Rendering camera view..." << endl;
-  cout.flush();
   graphicsData.camera->renderView(graphicsData.width, graphicsData.height);
-  
-  cout << "Processing moving objects..." << endl;
-  cout.flush();
+
   for(vector<cGenericMovingObject*>::iterator it = graphicsData.movingObjects.begin(); it != graphicsData.movingObjects.end(); it++)
   {
     double dt = (clock() - graphicsData.graphicsClock)/double(CLOCKS_PER_SEC);
     graphicsData.graphicsClock = clock();
-    cout << "Updating object with dt = " << dt << endl;
-    cout.flush();
+
     (*it)->graphicsLoopFunction(dt, hapticsData.tool->getDeviceGlobalPos(), hapticsData.tool->getDeviceGlobalLinVel());
   }
   
-  cout << "Swapping buffers..." << endl;
-  cout.flush();
   glfwSwapBuffers(graphicsData.window);
-  
-  cout << "Finishing GL operations..." << endl;
-  cout.flush();
   glFinish();
   
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     cout << "OpenGL Error: " << gluErrorString(err) << endl;
-    cout.flush();
   }
-  
-  cout << "updateGraphics complete" << endl;
-  cout.flush();
 }

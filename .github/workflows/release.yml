@@ -95,7 +95,10 @@ jobs:
             libxinerama-dev \
             libxrandr-dev \
             libxi-dev \
-            libusb-1.0-0-dev
+            libusb-1.0-0-dev \
+            libasound2-dev \
+            libx11-dev \
+            libudev-dev
           
       - name: Configure CMake
         run: |

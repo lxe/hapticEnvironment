@@ -128,28 +128,13 @@ int main(int argc, char* argv[])
   cout.flush();
   
   while (!glfwWindowShouldClose(graphicsData.window)) {
-    // cout << "Main loop iteration starting..." << endl;
-    cout.flush();
-    
     glfwGetWindowSize(graphicsData.window, &graphicsData.width, &graphicsData.height);
-    // cout << "Window size retrieved: " << graphicsData.width << "x" << graphicsData.height << endl;
-    cout.flush();
-    
     graphicsData.graphicsClock = clock();
-    // cout << "Graphics clock updated" << endl;
-    cout.flush();
-    
     updateGraphics();
-    
-    // cout << "Graphics updated, polling events..." << endl;
-    cout.flush();
-    
     glfwPollEvents();
     graphicsData.freqCounterGraphics.signal(1);
-    
-    // cout << "Main loop iteration complete" << endl;
-    cout.flush();
   }
+  
   glfwDestroyWindow(graphicsData.window);
   glfwTerminate();
   return(0);
