@@ -40,7 +40,7 @@ Follow these steps:
 
 1. Clone the repository and initialize submodules:
 ```powershell
-git clone https://github.com/mfliu/hapticEnvironment.git
+git clone https://github.com/lxe/hapticEnvironment.git
 cd hapticEnvironment
 git submodule init
 git submodule update
