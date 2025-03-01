@@ -17,7 +17,18 @@ client. Same `rpclib` for the server and client in C++, [`msgpack-rpc`](https://
 
 Heavily based on and inspired by: [this project](https://github.com/djoshea/haptic-control)
 
-### Building on Windows
+### Pre-built Binaries
+
+Pre-built binaries for Windows and Linux are available on the [Releases page](../../releases). These are automatically built for:
+- Every push to the main branch (nightly builds)
+- Every version tag (versioned releases)
+
+The binaries include:
+- HapticEnvironment (main application)
+- messageHandler (message handling service)
+- chai3d-demo (CHAI3D demo application)
+
+### Building from Source
 
 To build on Windows, you'll need:
 1. Visual Studio (2019 or later recommended)
