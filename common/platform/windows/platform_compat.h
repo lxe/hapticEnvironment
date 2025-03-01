@@ -51,7 +51,45 @@ namespace platform {
     #define CONSTEXPR constexpr
 
 #else
+    #include <unistd.h>
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+
+namespace platform {
+    // On Linux/Unix systems, pass through the native functions
+    inline void usleep(unsigned long usec) {
+        ::usleep(usec);
+    }
+
+    inline void sleep(unsigned long sec) {
+        ::sleep(sec);
+    }
+
+    // Socket types compatibility
+    typedef int SOCKET;
+
+    // Socket function compatibility - pass through to native implementations
+    inline int setsockopt(SOCKET s, int level, int optname, const void* optval, int optlen) {
+        return ::setsockopt(s, level, optname, optval, optlen);
+    }
+
+    inline int ioctl(SOCKET s, long cmd, int* argp) {
+        return ::ioctl(s, cmd, argp);
+    }
+
+    inline int close(SOCKET s) {
+        return ::close(s);
+    }
+
+    inline int bind(SOCKET s, const struct sockaddr* name, int namelen) {
+        return ::bind(s, name, namelen);
+    }
+} // namespace platform
+
     #define CONSTEXPR constexpr
+
 #endif // _WIN32
 
 #endif // _PLATFORM_COMPAT_H_ 
