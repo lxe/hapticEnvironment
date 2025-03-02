@@ -162,27 +162,66 @@ int MessageHandler::testMessage(int val)
 
 int main(int argc, char *argv[])
 {
+  cout << "Starting MessageHandler initialization..." << endl;
+  
   //TODO: Read Ports and IP address from config file
   const char* IP;
   int PORT;
-  if (argc <= 2) {
-    IP = "127.0.0.1";
-    PORT = 8080;
-  }
-  else {
-    IP = argv[1];
-    PORT = atoi(argv[2]);
-  }
-  MessageHandler* mh = new MessageHandler(IP, PORT);
-  cout << "Made Message Handler with IP " << IP << " and PORT " << PORT << endl;
-  mh->getServer()->bind("getMsgNum", [&mh](){return mh->getMsgNum();});
-  mh->getServer()->bind("getTimestamp", [&mh](){return mh->getTimestamp();});
-  mh->getServer()->bind("addModule", [&mh](int moduleID, string ipAddr, int port){return mh->addModule(moduleID, ipAddr, port);});
-  mh->getServer()->bind("subscribeTo", [&mh](int myID, int subscribeID){return mh->subscribeTo(myID, subscribeID);});
-  mh->getServer()->bind("sendMessage", [&mh](vector<char> packet, uint16_t lengthPacket, int sendingModule){return mh->sendMessage(packet, lengthPacket, sendingModule);});
-  mh->getServer()->bind("testMessage", [&mh](int val){return mh->testMessage(val);});
-  mh->getServer()->run(); 
   
-  delete mh;
-  return 0;
+  try {
+    cout << "Parsing command line arguments..." << endl;
+    if (argc <= 2) {
+      IP = "127.0.0.1";
+      PORT = 8080;
+      cout << "Using default IP and PORT: " << IP << ":" << PORT << endl;
+    } else {
+      IP = argv[1];
+      PORT = atoi(argv[2]);
+      cout << "Using provided IP and PORT: " << IP << ":" << PORT << endl;
+    }
+
+    cout << "Creating MessageHandler instance..." << endl;
+    MessageHandler* mh = new MessageHandler(IP, PORT);
+    if (!mh) {
+      cout << "Failed to create MessageHandler instance!" << endl;
+      return 1;
+    }
+    cout << "Successfully created MessageHandler with IP " << IP << " and PORT " << PORT << endl;
+
+    cout << "Binding RPC methods..." << endl;
+    try {
+      mh->getServer()->bind("getMsgNum", [&mh](){return mh->getMsgNum();});
+      mh->getServer()->bind("getTimestamp", [&mh](){return mh->getTimestamp();});
+      mh->getServer()->bind("addModule", [&mh](int moduleID, string ipAddr, int port){return mh->addModule(moduleID, ipAddr, port);});
+      mh->getServer()->bind("subscribeTo", [&mh](int myID, int subscribeID){return mh->subscribeTo(myID, subscribeID);});
+      mh->getServer()->bind("sendMessage", [&mh](vector<char> packet, uint16_t lengthPacket, int sendingModule){return mh->sendMessage(packet, lengthPacket, sendingModule);});
+      mh->getServer()->bind("testMessage", [&mh](int val){return mh->testMessage(val);});
+      cout << "Successfully bound all RPC methods" << endl;
+    } catch (const exception& e) {
+      cout << "Failed to bind RPC methods: " << e.what() << endl;
+      delete mh;
+      return 1;
+    }
+
+    cout << "Starting RPC server..." << endl;
+    try {
+      mh->getServer()->run();
+    } catch (const exception& e) {
+      cout << "Server failed to run: " << e.what() << endl;
+      delete mh;
+      return 1;
+    }
+    
+    cout << "Cleaning up..." << endl;
+    delete mh;
+    cout << "MessageHandler shutdown complete" << endl;
+    return 0;
+
+  } catch (const exception& e) {
+    cout << "Fatal error: " << e.what() << endl;
+    return 1;
+  } catch (...) {
+    cout << "Unknown fatal error occurred" << endl;
+    return 1;
+  }
 }
