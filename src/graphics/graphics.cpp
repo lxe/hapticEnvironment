@@ -1,4 +1,7 @@
 #include "graphics.h"
+#include "../core/debug.h"
+#include <sstream>
+#include <iomanip>
 
 /**
  * @file graphics.h
@@ -21,83 +24,83 @@ GraphicsData graphicsData;
 
 void initDisplay(void)
 {
-  cout << "Starting CHAI3D window initialization..." << endl;
-  
-  graphicsData.stereoMode = C_STEREO_DISABLED;
-  graphicsData.fullscreen = false;
-  graphicsData.mirroredDisplay = false;
-  if (!glfwInit()) {
-    cout << "Failed GLFW initialization" << endl;
-    cSleepMs(1000);
-    return;
-  }
-  cout << "GLFW initialized successfully" << endl;
-  
-  glfwSetErrorCallback(errorCallback);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Starting CHAI3D window initialization");
+    
+    graphicsData.stereoMode = C_STEREO_DISABLED;
+    graphicsData.fullscreen = false;
+    graphicsData.mirroredDisplay = false;
+    if (!glfwInit()) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, "Failed GLFW initialization");
+        cSleepMs(1000);
+        return;
+    }
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "GLFW initialized successfully");
+    
+    glfwSetErrorCallback(errorCallback);
 
-  const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-  cout << "Got video mode - Width: " << mode->width << " Height: " << mode->height << endl;
-  
-  int w = 0.8 * mode->height;
-  int h = 0.5 * mode->height;
-  int x = 0.5 * (mode->width-w);
-  int y = 0.5 * (mode->height-h);
-  
-  cout << "Setting up window hints..." << endl;
-  glfwWindowHint(GLFW_SAMPLES, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("Got video mode - Width: " + std::to_string(mode->width) + " Height: " + std::to_string(mode->height)).c_str());
+    
+    int w = 0.8 * mode->height;
+    int h = 0.5 * mode->height;
+    int x = 0.5 * (mode->width-w);
+    int y = 0.5 * (mode->height-h);
+    
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting up window hints...");
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-  if (graphicsData.stereoMode == C_STEREO_ACTIVE) {
-    glfwWindowHint(GLFW_STEREO, GL_TRUE);
-  }
-  else {
-    glfwWindowHint(GLFW_STEREO, GL_FALSE);
-  }
-  
-  graphicsData.width = w;
-  graphicsData.height = h;
-  graphicsData.xPos = x;
-  graphicsData.yPos = y;
-  graphicsData.swapInterval = 1;  
+    if (graphicsData.stereoMode == C_STEREO_ACTIVE) {
+        glfwWindowHint(GLFW_STEREO, GL_TRUE);
+    }
+    else {
+        glfwWindowHint(GLFW_STEREO, GL_FALSE);
+    }
+    
+    graphicsData.width = w;
+    graphicsData.height = h;
+    graphicsData.xPos = x;
+    graphicsData.yPos = y;
+    graphicsData.swapInterval = 1;  
 
-  cout << "Creating GLFW window..." << endl;
-  graphicsData.window = glfwCreateWindow(w, h, "CHAI3D", NULL, NULL);
-  if (!graphicsData.window) {
-    cout << "Failed to create window" << endl;
-    cSleepMs(1000);
-    glfwTerminate();
-    return;
-  }
-  cout << "Window created successfully" << endl;
-  
-  cout << "Setting up window properties..." << endl;
-  glfwGetWindowSize(graphicsData.window, &graphicsData.width, &graphicsData.height);
-  glfwSetWindowPos(graphicsData.window, graphicsData.xPos, graphicsData.yPos);
-  glfwSetKeyCallback(graphicsData.window, keySelectCallback);
-  glfwSetWindowSizeCallback(graphicsData.window, resizeWindowCallback);
-  glfwMakeContextCurrent(graphicsData.window);
-  glfwSwapInterval(graphicsData.swapInterval);
-  cout << "Window properties set" << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Creating GLFW window...");
+    graphicsData.window = glfwCreateWindow(w, h, "CHAI3D", NULL, NULL);
+    if (!graphicsData.window) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, "Failed to create window");
+        cSleepMs(1000);
+        glfwTerminate();
+        return;
+    }
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Window created successfully");
+    
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting up window properties...");
+    glfwGetWindowSize(graphicsData.window, &graphicsData.width, &graphicsData.height);
+    glfwSetWindowPos(graphicsData.window, graphicsData.xPos, graphicsData.yPos);
+    glfwSetKeyCallback(graphicsData.window, keySelectCallback);
+    glfwSetWindowSizeCallback(graphicsData.window, resizeWindowCallback);
+    glfwMakeContextCurrent(graphicsData.window);
+    glfwSwapInterval(graphicsData.swapInterval);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Window properties set");
 
 #ifdef GLEW_VERSION
-  cout << "Initializing GLEW..." << endl;
-  glewExperimental = GL_TRUE;
-  if(glewInit() != GLEW_OK) {
-    cout << "Failed to initialize GLEW library" << endl;
-    glfwTerminate();
-    return;
-  }
-  cout << "GLEW initialized successfully" << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Initializing GLEW...");
+    glewExperimental = GL_TRUE;
+    if(glewInit() != GLEW_OK) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, "Failed to initialize GLEW library");
+        glfwTerminate();
+        return;
+    }
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "GLEW initialized successfully");
 #endif
 
-  cout << "OpenGL Version: " << glGetString(GL_VERSION) << endl;
-  cout << "OpenGL Vendor: " << glGetString(GL_VENDOR) << endl;
-  cout << "OpenGL Renderer: " << glGetString(GL_RENDERER) << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("OpenGL Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION)))).c_str());
+    debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("OpenGL Vendor: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR)))).c_str());
+    debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("OpenGL Renderer: " + std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER)))).c_str());
 
-  cout << "CHAI3D window initialization complete" << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "CHAI3D window initialization complete");
 }
 
 /**
@@ -105,38 +108,38 @@ void initDisplay(void)
  */
 void initScene(void)
 {
-  cout << "Starting scene initialization..." << endl;
-  
-  cout << "Creating world..." << endl;
-  graphicsData.world = new cWorld();
-  cout << "Setting world background..." << endl;
-  graphicsData.world->m_backgroundColor.setBlack();
-  cout << "World created successfully" << endl;
-  
-  cout << "Setting up camera..." << endl;
-  graphicsData.camera = new cCamera(graphicsData.world);
-  cout << "Adding camera to world..." << endl;
-  graphicsData.world->addChild(graphicsData.camera);
-  cout << "Setting camera position..." << endl;
-  graphicsData.camera->set(cVector3d(400.0, 0.0, 0.0),
-                       cVector3d(0.0, 0.0, 0.0),
-                       cVector3d(0.0, 0.0, 1.0));
-  cout << "Setting camera mirror properties..." << endl;                     
-  graphicsData.camera->setMirrorVertical(graphicsData.mirroredDisplay);
-  graphicsData.camera->setMirrorHorizontal(graphicsData.mirroredDisplay);  
-  cout << "Camera setup complete" << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Starting scene initialization...");
+    
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Creating world...");
+    graphicsData.world = new cWorld();
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting world background...");
+    graphicsData.world->m_backgroundColor.setBlack();
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "World created successfully");
+    
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting up camera...");
+    graphicsData.camera = new cCamera(graphicsData.world);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Adding camera to world...");
+    graphicsData.world->addChild(graphicsData.camera);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting camera position...");
+    graphicsData.camera->set(cVector3d(400.0, 0.0, 0.0),
+                         cVector3d(0.0, 0.0, 0.0),
+                         cVector3d(0.0, 0.0, 1.0));
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting camera mirror properties...");                     
+    graphicsData.camera->setMirrorVertical(graphicsData.mirroredDisplay);
+    graphicsData.camera->setMirrorHorizontal(graphicsData.mirroredDisplay);  
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Camera setup complete");
 
-  cout << "Setting up lighting..." << endl;
-  graphicsData.light = new cDirectionalLight(graphicsData.world);
-  cout << "Adding light to camera..." << endl;
-  graphicsData.camera->addChild(graphicsData.light); 
-  cout << "Configuring light properties..." << endl;
-  graphicsData.light->setEnabled(true);
-  graphicsData.light->setLocalPos(0.0, 500.0, 0.0);
-  graphicsData.light->setDir(0.0, -1.0, 0.0);
-  cout << "Lighting setup complete" << endl;
-  
-  cout << "Scene initialization complete" << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Setting up lighting...");
+    graphicsData.light = new cDirectionalLight(graphicsData.world);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Adding light to camera...");
+    graphicsData.camera->addChild(graphicsData.light); 
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Configuring light properties...");
+    graphicsData.light->setEnabled(true);
+    graphicsData.light->setLocalPos(0.0, 500.0, 0.0);
+    graphicsData.light->setDir(0.0, -1.0, 0.0);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Lighting setup complete");
+    
+    debug_log(__FILE__, __LINE__, __FUNCTION__, "Scene initialization complete");
 }
 
 /**
@@ -148,8 +151,8 @@ void initScene(void)
  */
 void resizeWindowCallback(GLFWwindow* a_window, int a_width, int a_height)
 {
-  graphicsData.width = a_width;
-  graphicsData.height = a_height;
+    graphicsData.width = a_width;
+    graphicsData.height = a_height;
 }
 
 /**
@@ -160,7 +163,7 @@ void resizeWindowCallback(GLFWwindow* a_window, int a_width, int a_height)
  */
 void errorCallback(int error, const char* errorDescription)
 {
-  cout << "Error: " << errorDescription << endl;
+    debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("Error: " + std::string(errorDescription)).c_str());
 }
 
 /**
@@ -175,60 +178,90 @@ void errorCallback(int error, const char* errorDescription)
  */
 void keySelectCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-  if ((action != GLFW_PRESS) && (action != GLFW_REPEAT)) {
-    return;
-  }
-  else if ((key == GLFW_KEY_ESCAPE) || (key == GLFW_KEY_Q)) {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-  }
-  else if(key == GLFW_KEY_F) {
-    graphicsData.fullscreen = !graphicsData.fullscreen;
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    if (graphicsData.fullscreen) {
-      glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-      glfwSwapInterval(graphicsData.swapInterval);
+    debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("Key pressed: " + std::to_string(key)).c_str());
+    
+    try {
+        if ((action != GLFW_PRESS) && (action != GLFW_REPEAT)) {
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Ignoring non-press action");
+            return;
+        }
+        else if ((key == GLFW_KEY_ESCAPE) || (key == GLFW_KEY_Q)) {
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Closing window");
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+        else if(key == GLFW_KEY_F) {
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Toggling fullscreen");
+            graphicsData.fullscreen = !graphicsData.fullscreen;
+            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+            if (graphicsData.fullscreen) {
+                glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+                glfwSwapInterval(graphicsData.swapInterval);
+            }
+            else {
+                int w = 0.8 * mode->height;
+                int h = 0.5 * mode->height;
+                int x = 0.5 * (mode->width - w);
+                int y = 0.5 * (mode->height - h);
+                graphicsData.width = w;
+                graphicsData.height = h;
+                graphicsData.xPos = x;
+                graphicsData.yPos = y;
+                glfwSetWindowMonitor(window, NULL, x, y, w, h, mode->refreshRate);
+                glfwSwapInterval(graphicsData.swapInterval);
+            }
+        }
+        else {
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Processing regular key press");
+            const char* key_name;
+            if (key == 32) {
+                key_name = "space";
+            }
+            else {
+                key_name = glfwGetKeyName(key, 0);
+            }
+            
+            if (!key_name) {
+                debug_log(__FILE__, __LINE__, __FUNCTION__, "Warning: Could not get key name");
+                return;
+            }
+            
+            debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("Key name: " + std::string(key_name)).c_str());
+            
+            M_KEYPRESS keypressEvent;
+            memset(&keypressEvent, 0, sizeof(keypressEvent));
+            
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Getting message number");
+            auto packetNum = controlData.client->call("getMsgNum").as<int>();
+            
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Getting timestamp");
+            auto currTime = controlData.client->call("getTimestamp").as<double>();
+            
+            keypressEvent.header.serial_no = packetNum;
+            keypressEvent.header.msg_type = KEYPRESS;
+            keypressEvent.header.timestamp = currTime;
+            memcpy(&(keypressEvent.keyname), key_name, sizeof(keypressEvent.keyname));
+            
+            char* packet[sizeof(keypressEvent)];
+            memcpy(&packet, &keypressEvent, sizeof(keypressEvent));
+            
+            debug_log(__FILE__, __LINE__, __FUNCTION__, "Sending message");
+            auto res = controlData.client->call("sendMessage", (char* const) packet, sizeof(packet), controlData.MODULE_NUM).as<int>();
+            
+            if (res == 1) {
+                debug_log(__FILE__, __LINE__, __FUNCTION__, "Successfully sent KEYPRESS message");
+            }
+            else {
+                debug_log(__FILE__, __LINE__, __FUNCTION__, "Failed to send KEYPRESS message");
+            }
+        }
+    } catch (const std::exception& e) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("Exception in keySelectCallback: " + std::string(e.what())).c_str());
+        throw;
+    } catch (...) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, "Unknown exception in keySelectCallback");
+        throw;
     }
-    else {
-      int w = 0.8 * mode->height;
-      int h = 0.5 * mode->height;
-      int x = 0.5 * (mode->width - w);
-      int y = 0.5 * (mode->height - h);
-      graphicsData.width = w;
-      graphicsData.height = h;
-      graphicsData.xPos = x;
-      graphicsData.yPos = y;
-      glfwSetWindowMonitor(window, NULL, x, y, w, h, mode->refreshRate);
-      glfwSwapInterval(graphicsData.swapInterval);
-    }
-  }
-  else {
-    const char* key_name;
-    if (key == 32) {
-      key_name = "space";
-    }
-    else {
-      key_name = glfwGetKeyName(key, 0);
-    }
-    M_KEYPRESS keypressEvent;
-    memset(&keypressEvent, 0, sizeof(keypressEvent));
-    auto packetNum = controlData.client->call("getMsgNum").as<int>();
-    auto currTime = controlData.client->call("getTimestamp").as<double>();
-    keypressEvent.header.serial_no = packetNum;
-    keypressEvent.header.msg_type = KEYPRESS;
-    keypressEvent.header.timestamp = currTime;
-    memcpy(&(keypressEvent.keyname), key_name, sizeof(keypressEvent.keyname));
-    char* packet[sizeof(keypressEvent)];
-    memcpy(&packet, &keypressEvent, sizeof(keypressEvent));
-    auto res = controlData.client->call("sendMessage", (char* const) packet, sizeof(packet), controlData.MODULE_NUM).as<int>();
-    //sendPacket((char *) packet, sizeof(packet), false);
-    if (res == 1) {
-      cout << "Sent KEYPRESS message" << endl;
-    }
-    else {
-      cout << "Error sending KEYPRESS message" << endl;
-    }
-  }
 }
 
 /**
@@ -238,22 +271,31 @@ void keySelectCallback(GLFWwindow* window, int key, int scancode, int action, in
  */
 void updateGraphics(void)
 {
-  graphicsData.world->updateShadowMaps(false, graphicsData.mirroredDisplay);
-  graphicsData.camera->renderView(graphicsData.width, graphicsData.height);
+    try {
+        // debug_log(__FILE__, __LINE__, __FUNCTION__, "Updating graphics");
+        graphicsData.world->updateShadowMaps(false, graphicsData.mirroredDisplay);
+        graphicsData.camera->renderView(graphicsData.width, graphicsData.height);
 
-  for(vector<cGenericMovingObject*>::iterator it = graphicsData.movingObjects.begin(); it != graphicsData.movingObjects.end(); it++)
-  {
-    double dt = (clock() - graphicsData.graphicsClock)/double(CLOCKS_PER_SEC);
-    graphicsData.graphicsClock = clock();
+        for(vector<cGenericMovingObject*>::iterator it = graphicsData.movingObjects.begin(); it != graphicsData.movingObjects.end(); it++)
+        {
+            double dt = (clock() - graphicsData.graphicsClock)/double(CLOCKS_PER_SEC);
+            graphicsData.graphicsClock = clock();
 
-    (*it)->graphicsLoopFunction(dt, hapticsData.tool->getDeviceGlobalPos(), hapticsData.tool->getDeviceGlobalLinVel());
-  }
-  
-  glfwSwapBuffers(graphicsData.window);
-  glFinish();
-  
-  GLenum err = glGetError();
-  if (err != GL_NO_ERROR) {
-    cout << "OpenGL Error: " << gluErrorString(err) << endl;
-  }
+            (*it)->graphicsLoopFunction(dt, hapticsData.tool->getDeviceGlobalPos(), hapticsData.tool->getDeviceGlobalLinVel());
+        }
+   
+        glfwSwapBuffers(graphicsData.window);
+        glFinish();
+   
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("OpenGL Error: " + std::string((char*)gluErrorString(err))).c_str());
+        }
+    } catch (const std::exception& e) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, std::string("Exception in updateGraphics: " + std::string(e.what())).c_str());
+        throw;
+    } catch (...) {
+        debug_log(__FILE__, __LINE__, __FUNCTION__, "Unknown exception in updateGraphics");
+        throw;
+    }
 }

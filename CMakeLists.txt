@@ -92,6 +92,7 @@ if(WIN32)
         ws2_32
         Iphlpapi
         winmm
+        DbgHelp  # Add DbgHelp library for stack trace functionality
     )
 elseif(UNIX AND NOT APPLE)
     # Set DHD paths
